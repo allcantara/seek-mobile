@@ -5,6 +5,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 import Inicio from './screens/Inicio/Inicio';
 import Pedidos from './screens/Pedidos/Pedidos';
 import Confirmacao from './screens/Pedidos/Confirmacao';
+import Sucesso from './screens/CompraRealizada/Sucesso';
 
 export default createAppContainer(
   createStackNavigator(
@@ -12,13 +13,24 @@ export default createAppContainer(
       Inicio: {
         screen: Inicio,
         navigationOptions: {
-          header: null
+          headerShown: false
         }
       },
       Pedidos: {
         screen: Pedidos,
       },
-      Confirmacao
+      Confirmacao: {
+        screen: Confirmacao,
+        navigationOptions: {
+          title: 'Finalizar',
+        }
+      },
+      Sucesso: {
+        screen: Sucesso,
+        navigationOptions: {
+          headerShown: false
+        }
+      }
     }
   )
 );
