@@ -86,6 +86,11 @@ export default ({ navigation }) => {
     }
   }
 
+  // A comportamento da replicação da contagem da quantidade pode estar acontecendo devido ao produto esta dentro da lista.
+  // Tente criar uma lógica em que o produto virá com a quantidade e o no momento do incremento
+  //  alteramos o valor de dentro da lista e e depois atualizamos o estado.
+  
+  // É importante lembrar de isolar os componentes pq talvez o comportamento no RN seja diferente do ReactJS.
   return (
     <>
     <View style={styles.container}>
