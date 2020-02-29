@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import {
   Image,
   StyleSheet,
@@ -7,27 +8,62 @@ import {
   View,
   FlatList,
   Dimensions,
+  Alert,
+  AsyncStorage,
+  ImageBackground,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
+
+import api from '../../services/api';
 
 export default ({ navigation }) => {
   const [list, setList] = useState([]);
   const [listPurchase, setListPurchase] = useState([]);
   const [sum, setSum] = useState(0);
-  
 
   useEffect(() => {
-    const { item } = navigation.state.params;
-    item.produtos.map(item => item.quantidade = 0)
-    setList([...item.produtos])
-  }, []);
+    const { item } = navigation.state.params
+    indexProducts(item)
+  }, [])
+
+
+  const indexProducts = async (item) => {
+    try {
+      const { status, data } = await api.get(`/restaurant/products/${item._id}`)
+
+      if(status === 203) {
+        Alert.alert('Atenção', 'Falha de autenticação!')
+        navigation.navigate('Login');
+        await AsyncStorage.clear()
+      }
+
+      if(status === 202) {
+        Alert.alert('Atenção', data.message)
+      }
+
+      if(status === 200) {
+        data.map(prod => {
+          const image_url = prod.image_url.replace('localhost', '192.168.0.116');
+          prod.amount = 0
+          prod.image_url = image_url
+        })
+        // data.produtos.map(item => item.quantidade = 0)
+        setList([...data])
+      }
+
+
+
+    } catch(error) {
+      console.debug(error)
+      Alert.alert('Atenção', 'Falha ao buscar os produtos!')
+    }
+  }
 
   const handleButtonPlus = (item) => {
-    if(item.quantidade >= 0) {
+    if(item.amount >= 0) {
       const produtos = [...list];
       produtos.map(prod => {
-        if(prod.id === item.id) {
-          prod.quantidade += 1;
+        if(prod._id === item._id) {
+          prod.amount += 1;
         }
       })
       setList([ ...produtos ]);
@@ -44,7 +80,7 @@ export default ({ navigation }) => {
       itemList.push(item);
     }
 
-    let itemFilter = itemList.filter(e => e.id === item.id);
+    let itemFilter = itemList.filter(e => e._id === item._id);
     if(itemFilter.length === 0) {
       itemList.push(item);
     }
@@ -53,11 +89,11 @@ export default ({ navigation }) => {
   }
 
   const handleButtonMinus = (item) => {
-    if(item.quantidade > 0) {
+    if(item.amount > 0) {
       const produtos = [...list];
       produtos.map(prod => {
-        if(prod.id === item.id) {
-          prod.quantidade -= 1;
+        if(prod._id === item._id) {
+          prod.amount -= 1;
         }
       })
       sumDown(item)
@@ -66,22 +102,25 @@ export default ({ navigation }) => {
   }
 
   const sumUp = (item) => {
-    const soma = sum + item.preco;
+    const soma = sum + item.price;
     setSum(soma);
   }
 
   const sumDown = (item) => {
-    const soma = sum - item.preco;
+    let soma = sum - item.price;
+    if(soma < 0) {
+      soma = 0
+    }
     setSum(soma);
   }
 
   const handleConfirm = () => {
-    
     if(sum > 0) {
       const data = {
-        products: listPurchase.filter(item => item.quantidade > 0),
+        products: listPurchase.filter(item => item.amount > 0),
         sum,
       }
+
       navigation.navigate('Confirmacao', { data });
     }
   }
@@ -96,15 +135,16 @@ export default ({ navigation }) => {
     <View style={styles.container}>
         <FlatList
           data={list}
-          keyExtractor={e => String(e.id)}
+          keyExtractor={e => String(e._id)}
           numColumns={2}
           renderItem={({ item }) => (
             <View style={styles.componentItem}>
               <View style={styles.shadow}>
-                <Image source={{ uri: item.foto }} style={styles.image} />
+                <ImageBackground source={{ uri: item.image_url }} style={styles.image}>
+                </ImageBackground>
                 <View>
-                  <Text style={styles.name}>{item.nome.toUpperCase()}</Text>
-                  <Text style={styles.price}>R$ {String(item.preco.toFixed(2)).replace('.', ',')}</Text>
+                  <Text style={styles.name}>{item.name}</Text>
+                  <Text style={styles.price}>R$ {String(item.price.toFixed(2)).replace('.', ',')}</Text>
                 </View>
                 <View style={styles.buttons}>
                   <View style={styles.buttonComponent}>
@@ -115,7 +155,7 @@ export default ({ navigation }) => {
                       <Icon name="minus" size={16} color="#624CAB" />
                     </TouchableOpacity>
                   </View>
-                  <Text style={styles.qtd}>{item.quantidade}</Text>
+                  <Text style={styles.qtd}>{item.amount}</Text>
                 </View>
               </View>
             </View>
@@ -174,6 +214,7 @@ const styles = StyleSheet.create({
 
   image: {
     flex: 1,
+    // height: Dimensions.get('window').height / 7
   },
 
   name: {

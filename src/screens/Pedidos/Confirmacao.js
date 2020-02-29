@@ -18,13 +18,14 @@ export default ({ navigation }) => {
 
 
   const componentList = item => {
+    const image_url = item.image_url.replace('localhost', '192.168.0.116')
     return (
       <View style={styles.row}>
-        <Image source={{ uri: item.foto }} style={styles.image} />
+        <Image source={{ uri: image_url }} style={styles.image} />
         <View style={styles.itemContainer}>
-          <Text style={styles.nome} >{item.nome}</Text>
-          <Text style={styles.preco} >Preço: R$ {String(item.preco.toFixed(2)).replace('.', ',')}</Text>
-          <Text style={styles.quantidade} >Quantidade: {item.quantidade}</Text>
+          <Text style={styles.nome} >{item.name}</Text>
+          <Text style={styles.preco} >Preço: R$ {String(item.price.toFixed(2)).replace('.', ',')}</Text>
+          <Text style={styles.quantidade} >Quantidade: {item.amount}</Text>
         </View>
       </View>
     )

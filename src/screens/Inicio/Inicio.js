@@ -7,31 +7,53 @@ import {
   FlatList,
   StyleSheet,
   Dimensions,
-  TouchableOpacity
+  TouchableOpacity,
+  Alert,
+  AsyncStorage
 } from 'react-native';
 
 import api from '../../services/api';
 
-export default props => {
+export default ({ navigation }) => {
   const [lista, setLista] = useState([]);
+  const [user, setUser] = useState({})
 
   useEffect(() => {
-    setLista([...api]);
+    indexRestaurants()
+    setUser(navigation.state.params.user)
   }, []);
 
   const onNavigator = (item) => {
-    props.navigation.navigate('Pedidos', { item });
+    navigation.navigate('Pedidos', { item });
   }
 
+  const indexRestaurants = async () => {
+    try {
+      if(lista.length === 0) {
+        const { status, data } = await api.get('/restaurant')
+        if(status === 203) {
+          Alert.alert('Atenção', 'Falha de autenticação!')
+          navigation.navigate('Login');
+          await AsyncStorage.clear()
+        }
+        
+        setLista([...data])
+      }
+    } catch(error) {
+      console.debug(error)
+      Alert.alert('Atenção', 'Falha ao buscar os restaurantes!')
+    }
+  }
 
   const componentList = item => {
+    const image_url = item.image_url.replace('localhost', '192.168.0.116')
     return (
       <TouchableOpacity onPress={() => onNavigator(item)}>
         <View style={styles.row}>
-          <ImageBackground source={{ uri: item.imagem }} style={styles.background}>
+          <ImageBackground source={{ uri: image_url }} style={styles.background}>
             <View style={styles.itemContainer}>
-              <Text style={styles.nameTitle} >{item.nome}</Text>
-              <Text style={styles.nameSubTitle} >{item.endereco}</Text>
+              <Text style={styles.nameTitle} >{item.name}</Text>
+              <Text style={styles.nameSubTitle} >{item.addressName}</Text>
             </View>
           </ImageBackground>
         </View>
