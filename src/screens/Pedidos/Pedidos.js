@@ -14,11 +14,13 @@ import {
 } from 'react-native';
 
 import api from '../../services/api';
+import Constantes from '../../constants/Constantes'
 
 export default ({ navigation }) => {
   const [list, setList] = useState([]);
   const [listPurchase, setListPurchase] = useState([]);
   const [sum, setSum] = useState(0);
+
 
   useEffect(() => {
     const { item } = navigation.state.params
@@ -42,11 +44,15 @@ export default ({ navigation }) => {
 
       if(status === 200) {
         data.map(prod => {
-          const image_url = prod.image_url.replace('localhost', '192.168.0.116');
+          const image_url = prod.image_url.replace('localhost', Constantes.HTTP_HOST);
           prod.amount = 0
           prod.image_url = image_url
         })
-        // data.produtos.map(item => item.quantidade = 0)
+        
+        if(data.length === 0) {
+          Alert.alert('Atenção', 'Nenhum produto cadastrado!')
+        }        
+
         setList([...data])
       }
 

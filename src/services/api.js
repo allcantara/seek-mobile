@@ -1,7 +1,8 @@
 import axios from 'axios';
+import Constantes from '../constants/Constantes'
 import { getToken } from './auth';
 
-export const api = axios.create({ baseURL: 'http://192.168.0.116:3333' });
+export const api = axios.create({ baseURL: `http://${Constantes.HTTP_HOST}:3333` });
 
 api.interceptors.request.use(async config => {
   const token = await getToken();

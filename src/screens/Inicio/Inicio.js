@@ -13,10 +13,12 @@ import {
 } from 'react-native';
 
 import api from '../../services/api';
+import Constantes from '../../constants/Constantes'
 
 export default ({ navigation }) => {
   const [lista, setLista] = useState([]);
   const [user, setUser] = useState({})
+
 
   useEffect(() => {
     indexRestaurants()
@@ -46,7 +48,7 @@ export default ({ navigation }) => {
   }
 
   const componentList = item => {
-    const image_url = item.image_url.replace('localhost', '192.168.0.116')
+    const image_url = item.image_url.replace('localhost', Constantes.HTTP_HOST)
     return (
       <TouchableOpacity onPress={() => onNavigator(item)}>
         <View style={styles.row}>
