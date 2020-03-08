@@ -20,11 +20,13 @@ export default ({ navigation }) => {
   const [list, setList] = useState([]);
   const [listPurchase, setListPurchase] = useState([]);
   const [sum, setSum] = useState(0);
+  const [user, setUser] = useState({})
 
 
   useEffect(() => {
-    const { item } = navigation.state.params
+    const { item, user: dataUser } = navigation.state.params
     indexProducts(item)
+    setUser(dataUser)
   }, [])
 
 
@@ -32,47 +34,47 @@ export default ({ navigation }) => {
     try {
       const { status, data } = await api.get(`/restaurant/products/${item._id}`)
 
-      if(status === 203) {
+      if (status === 203) {
         Alert.alert('Atenção', 'Falha de autenticação!')
         navigation.navigate('Login');
         await AsyncStorage.clear()
       }
 
-      if(status === 202) {
+      if (status === 202) {
         Alert.alert('Atenção', data.message)
       }
 
-      if(status === 200) {
+      if (status === 200) {
         data.map(prod => {
           const image_url = prod.image_url.replace('localhost', Constantes.HTTP_HOST);
           prod.amount = 0
           prod.image_url = image_url
         })
-        
-        if(data.length === 0) {
+
+        if (data.length === 0) {
           Alert.alert('Atenção', 'Nenhum produto cadastrado!')
-        }        
+        }
 
         setList([...data])
       }
 
 
 
-    } catch(error) {
+    } catch (error) {
       console.debug(error)
       Alert.alert('Atenção', 'Falha ao buscar os produtos!')
     }
   }
 
   const handleButtonPlus = (item) => {
-    if(item.amount >= 0) {
+    if (item.amount >= 0) {
       const produtos = [...list];
       produtos.map(prod => {
-        if(prod._id === item._id) {
+        if (prod._id === item._id) {
           prod.amount += 1;
         }
       })
-      setList([ ...produtos ]);
+      setList([...produtos]);
       sumUp(item);
       addItemListPurchase(item);
     }
@@ -82,12 +84,12 @@ export default ({ navigation }) => {
   const addItemListPurchase = (item) => {
     let itemList = [...listPurchase];
 
-    if(itemList.length === 0) {
+    if (itemList.length === 0) {
       itemList.push(item);
     }
 
     let itemFilter = itemList.filter(e => e._id === item._id);
-    if(itemFilter.length === 0) {
+    if (itemFilter.length === 0) {
       itemList.push(item);
     }
 
@@ -95,15 +97,15 @@ export default ({ navigation }) => {
   }
 
   const handleButtonMinus = (item) => {
-    if(item.amount > 0) {
+    if (item.amount > 0) {
       const produtos = [...list];
       produtos.map(prod => {
-        if(prod._id === item._id) {
+        if (prod._id === item._id) {
           prod.amount -= 1;
         }
       })
       sumDown(item)
-      setList([ ...produtos ]);
+      setList([...produtos]);
     }
   }
 
@@ -114,31 +116,33 @@ export default ({ navigation }) => {
 
   const sumDown = (item) => {
     let soma = sum - item.price;
-    if(soma < 0) {
+    if (soma < 0) {
       soma = 0
     }
     setSum(soma);
   }
 
   const handleConfirm = () => {
-    if(sum > 0) {
+    if (sum > 0) {
+      const products = listPurchase.filter(item => item.amount > 0)
       const data = {
-        products: listPurchase.filter(item => item.amount > 0),
+        products,
         sum,
+        restaurant: products[0].restaurant,
       }
 
-      navigation.navigate('Confirmacao', { data });
+      navigation.navigate('Confirmacao', { data, user });
     }
   }
 
   // A comportamento da replicação da contagem da quantidade pode estar acontecendo devido ao produto esta dentro da lista.
   // Tente criar uma lógica em que o produto virá com a quantidade e o no momento do incremento
   //  alteramos o valor de dentro da lista e e depois atualizamos o estado.
-  
+
   // É importante lembrar de isolar os componentes pq talvez o comportamento no RN seja diferente do ReactJS.
   return (
     <>
-    <View style={styles.container}>
+      <View style={styles.container}>
         <FlatList
           data={list}
           keyExtractor={e => String(e._id)}
@@ -167,18 +171,18 @@ export default ({ navigation }) => {
             </View>
           )}
         />
+      </View>
+      <View style={styles.containerQuantidade}>
+        <View style={styles.quant}>
+          <Text style={styles.sum}>R$ {String(sum.toFixed(2)).replace('.', ',')}</Text>
         </View>
-        <View style={styles.containerQuantidade}>
-          <View style={styles.quant}>
-            <Text style={styles.sum}>R$ {String(sum.toFixed(2)).replace('.', ',')}</Text>
-          </View>
-          <TouchableOpacity
-            disabled={sum > 0 ? false : true}
-            style={{ ...styles.button, backgroundColor: sum > 0 ? '#624CAB' : '#999' }} // 624CAB
-            onPress={() => handleConfirm()} >
-            <Text style={styles.text}>CONFIRMAR</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          disabled={sum > 0 ? false : true}
+          style={{ ...styles.button, backgroundColor: sum > 0 ? '#624CAB' : '#999' }} // 624CAB
+          onPress={() => handleConfirm()} >
+          <Text style={styles.text}>CONFIRMAR</Text>
+        </TouchableOpacity>
+      </View>
     </>
   );
 }
@@ -245,7 +249,7 @@ const styles = StyleSheet.create({
   },
 
   buttonComponent: {
-    flexDirection:'row',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
   },

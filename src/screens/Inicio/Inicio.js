@@ -26,22 +26,22 @@ export default ({ navigation }) => {
   }, []);
 
   const onNavigator = (item) => {
-    navigation.navigate('Pedidos', { item });
+    navigation.navigate('Pedidos', { item, user });
   }
 
   const indexRestaurants = async () => {
     try {
-      if(lista.length === 0) {
+      if (lista.length === 0) {
         const { status, data } = await api.get('/restaurant')
-        if(status === 203) {
+        if (status === 203) {
           Alert.alert('Atenção', 'Falha de autenticação!')
           navigation.navigate('Login');
           await AsyncStorage.clear()
         }
-        
+
         setLista([...data])
       }
-    } catch(error) {
+    } catch (error) {
       console.debug(error)
       Alert.alert('Atenção', 'Falha ao buscar os restaurantes!')
     }
@@ -81,21 +81,21 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 30,
   },
-  
+
   compList: {
     height: Dimensions.get('window').height,
     backgroundColor: '#FFF',
   },
-  
+
   row: {
     borderColor: '#FFF',
     borderWidth: 1,
   },
-  
+
   background: {
     height: 200,
   },
-  
+
   itemContainer: {
     flex: 1,
     alignItems: 'center',

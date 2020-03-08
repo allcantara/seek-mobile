@@ -1,19 +1,57 @@
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, View, Text, Image, FlatList, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { SafeAreaView, View, Text, Image, FlatList, StyleSheet, Dimensions, TouchableOpacity, Alert } from 'react-native';
+import deviceConfig from '../../constants/Device'
+import paymentConfig from '../../constants/Payment'
+import api from '../../services/api'
 
 export default ({ navigation }) => {
   const [sum, setSum] = useState(0);
+  const [user, setUser] = useState({})
   const [lista, setLista] = useState([]);
+  const [restaurant, setRestaurant] = useState('')
 
   useEffect(() => {
-    const { data } = navigation.state.params;
+    const { data, user: dataUser } = navigation.state.params;
     setSum(data.sum)
+    setUser(dataUser)
     setLista([...data.products])
+    setRestaurant(data.restaurant)
   }, [])
 
 
-  const handleFinish = () => {
-    navigation.navigate('Sucesso')
+  const handleFinish = async () => {
+    try {
+      let products = []
+
+      lista.map(prod => {
+        products.push({
+          item: prod._id,
+          amount: prod.amount,
+        })
+      })
+
+      const purchase = {
+        restaurant,
+        user: user._id,
+        device: deviceConfig.APP,
+        priceTotal: sum,
+        payment: paymentConfig.CARD,
+        products,
+      }
+
+      const { status, data } = await api.post('/purchase', purchase)
+
+      if (status === 200) {
+        navigation.navigate('Sucesso', { purchase: data })
+      } else if (status === 202) {
+        Alert.alert('Desculpe', data.message)
+      }
+    } catch (error) {
+      console.error(error)
+      Alert.alert('Desculpe', 'Ocorreu uma falha ao processar o pedido!')
+    }
+
   }
 
 
@@ -57,7 +95,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     paddingBottom: 62,
   },
-  
+
   row: {
     flex: 1,
     flexDirection: 'row',
@@ -66,13 +104,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
   },
-  
+
   image: {
     width: 80,
     height: 80,
   },
 
-  
+
   itemContainer: {
     flex: 1,
     alignItems: 'flex-start',
